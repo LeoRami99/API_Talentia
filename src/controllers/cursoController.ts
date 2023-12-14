@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Curso, schemaCurso } from "../models/Curso";
 import { Administrador } from "../models/Administrador";
 import Joi from "joi";
+import { ICurso, ILecciones, IModulos_lecciones } from "../Interfaces/interfaceCurso";
 // import jwt from "jsonwebtoken";
 
 class CursoController {
@@ -75,7 +76,7 @@ class CursoController {
 				});
 			}
 			// parsear a JSON
-			const modulos_lecciones = JSON.parse(modulo_lecciones.modulos_lecciones);
+			const modulos_lecciones: IModulos_lecciones = JSON.parse(modulo_lecciones.modulos_lecciones);
 
 			return res.status(200).json({
 				modulos_lecciones,
@@ -106,7 +107,7 @@ class CursoController {
 				});
 			}
 			// parsear a JSON
-			const modulos_lecciones = JSON.parse(modulo_lecciones.modulos_lecciones);
+			const modulos_lecciones: IModulos_lecciones = JSON.parse(modulo_lecciones.modulos_lecciones);
 
 			return res.status(200).json({
 				modulos_lecciones,
@@ -116,6 +117,37 @@ class CursoController {
 			res.status(500).json({
 				error: "Error en el servidor",
 			});
+		}
+	};
+	getCursos = async (req: Request, res: Response) => {
+		try {
+			const cursos = await Curso.findAll({
+				where: { estado: true },
+				attributes: {
+					exclude: ["AdministradorId"],
+				},
+			});
+
+			if (cursos.length > 0) {
+				const cursos_json: ICurso[] = cursos.map((curso) => {
+					// Convierte el curso a un objeto JSON
+					const cursoObj = curso.get({ plain: true });
+
+					// Convierte el string de modulos_lecciones a JSON, si existe
+					if (cursoObj.modulos_lecciones && typeof cursoObj.modulos_lecciones === "string") {
+						cursoObj.modulos_lecciones = JSON.parse(cursoObj.modulos_lecciones);
+					}
+
+					return cursoObj;
+				});
+
+				return res.status(200).json({ cursos: cursos_json });
+			} else {
+				return res.status(404).json({ error: "No existen cursos" });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: "Error en el servidor" });
 		}
 	};
 
