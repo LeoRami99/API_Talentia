@@ -1,0 +1,28 @@
+├── README.md
+├── package-lock.json
+├── package.json
+├── src
+│   ├── Interfaces
+│   │   └── interfaceCurso.ts
+│   ├── app.ts
+│   ├── config.ts
+│   ├── controllers
+│   │   ├── administradorController.ts
+│   │   ├── categoriasController.ts
+│   │   ├── cursoController.ts
+│   │   └── usuarioController.ts
+│   ├── init.ts
+│   ├── middlewares
+│   ├── models
+│   │   ├── Administrador.ts
+│   │   ├── Curso.ts
+│   │   ├── Usuario.ts
+│   │   └── initAsociaciones.ts
+│   └── routes
+│       ├── administradorRoutes.ts
+│       ├── categoriasRoute.ts
+│       ├── cursoRoutes.ts
+│       └── usuarioRoutes.ts
+├── talentia.tree
+└── tsconfig.json
+
