@@ -5,6 +5,7 @@ import { applyAssociations } from "./models/initAsociaciones";
 import usuarioRoutes from "./routes/usuarioRoutes";
 import administradorRoutes from "./routes/administradorRoutes";
 import cursoRoutes from "./routes/cursoRoutes";
+import examenRoutes from "./routes/examenRoutes";
 
 //opciones para selectores
 import categoriasRoutes from "./routes/categoriasRoute";
@@ -21,6 +22,7 @@ app.use(`${API_VERSION}/usuario`, usuarioRoutes);
 app.use(`${API_VERSION}/administrador`, administradorRoutes);
 app.use(`${API_VERSION}/curso`, cursoRoutes);
 app.use(`${API_VERSION}/categorias`, categoriasRoutes);
+app.use(`${API_VERSION}/examen`, examenRoutes);
 
 // Aqui se aplica la función de crear la asociación
 
