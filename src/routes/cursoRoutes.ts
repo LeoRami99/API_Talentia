@@ -7,6 +7,7 @@ const cursoController = new CursoController();
 
 // creación del curso
 router.get("/", cursoController.getCursos);
+router.get("/:id_curso", cursoController.getCursoById);
 router.post("/crear", cursoController.crearCurso);
 router.get("/modulos-lecciones", cursoController.getCursoModuloLecciones);
 router.put("/actualizar/:id_curso", cursoController.updateCurso);

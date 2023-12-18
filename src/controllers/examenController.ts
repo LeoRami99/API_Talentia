@@ -1,5 +1,7 @@
 import { Examen, schemaExamen, preguntasOpcionesSchema } from "../models/Examen";
+import { ProgresoExamen } from "../models/ProgresoExamen";
 import { Administrador } from "../models/Administrador";
+import { Usuario } from "../models/Usuario";
 import { Request, Response } from "express";
 import { IPregunta, IOpciones } from "../Interfaces/interfaceExamen";
 
@@ -209,6 +211,50 @@ class ExamenController {
 			console.error(error);
 			res.status(500).json({
 				message: "Error al obtener el examen",
+			});
+		}
+	};
+
+	// progreso del examen
+	createProgresoExamen = async (req: Request, res: Response) => {
+		try {
+			const { usuarioID, examenID } = req.body;
+
+			const existExamen = await Examen.findByPk(examenID);
+			if (!existExamen) {
+				return res.status(404).json({ message: "El examen no existe" });
+			}
+			const existUsuario = await Usuario.findByPk(usuarioID);
+			if (!existUsuario) {
+				return res.status(404).json({ message: "El usuario no existe" });
+			}
+			// Aquí se valida que el usuario no tenga un progreso de este examen
+			const progresoExamenExist = await ProgresoExamen.findOne({
+				where: { UsuarioId: usuarioID, ExamenId: examenID },
+			});
+			if (progresoExamenExist) {
+				return res.status(400).json({
+					message: "El usuario ya tiene un progreso de este examen",
+				});
+			}
+			const progresoExamen = await ProgresoExamen.create({
+				UsuarioId: usuarioID,
+				ExamenId: examenID,
+			});
+			if (progresoExamen) {
+				res.status(201).json({
+					message: "Progreso del examen creado correctamente",
+					progresoExamen,
+				});
+			} else {
+				return res.status(500).json({
+					message: "Error al crear el progreso del examen",
+				});
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({
+				message: "Error al crear el progreso del examen",
 			});
 		}
 	};

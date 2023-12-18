@@ -10,7 +10,7 @@ class ProgresoUsuario extends Model {
 	public id!: string;
 	public UsuarioId!: string;
 	public CursoId!: string;
-	public progreso!: number;
+	public progreso!: string;
 	public completado!: boolean;
 }
 ProgresoUsuario.init(

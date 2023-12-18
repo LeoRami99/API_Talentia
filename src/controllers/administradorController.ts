@@ -144,6 +144,42 @@ class AdministradorController {
 			});
 		}
 	};
+	loginAdministrador = async (req: Request, res: Response) => {
+		try {
+			const { email, password } = req.body;
+			const administrador = await Administrador.findOne({ where: { email } });
+			if (!administrador) {
+				return res.status(400).json({
+					error: "Administrador no existe",
+				});
+			}
+			const validPassword = bcrypt.compareSync(password, administrador.password);
+			if (!validPassword) {
+				return res.status(400).json({
+					error: "Password incorrecto",
+				});
+			}
+			const token = jwt.sign(
+				{
+					id: administrador.id,
+					role: "administrador",
+				},
+				process.env.JWT_SECRET_KEY as string,
+				{
+					expiresIn: "1h",
+				}
+			);
+			return res.status(200).json({
+				message: "Administrador logueado exitosamente",
+				token,
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({
+				error: "Error en el servidor",
+			});
+		}
+	};
 }
 
 export default AdministradorController;

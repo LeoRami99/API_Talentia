@@ -11,4 +11,7 @@ router.put("/actualizar-preguntas-opciones/:id", examenController.updatePregunta
 router.get("/get-admin/:id", examenController.getExamenesByIdAdmin);
 router.get("/get/:id", examenController.getExamenById);
 
+// Creación de progreso del examen para el usuario
+router.post("/crear-progreso", examenController.createProgresoExamen);
+
 export default router;

@@ -25,4 +25,7 @@ const configMail = {
 	},
 };
 
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+
 export { sequelize, configMail };
+export { JWT_SECRET_KEY };

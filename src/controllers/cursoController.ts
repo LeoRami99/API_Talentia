@@ -307,6 +307,39 @@ class CursoController {
 			});
 		}
 	};
+	getCursoById = async (req: Request, res: Response) => {
+		try {
+			const { id_curso } = req.params;
+			const curso = await Curso.findOne({
+				where: { id: id_curso },
+				attributes: { exclude: ["AdministradorId"] },
+			});
+
+			// Verificar primero si el curso existe antes de intentar parsear
+			if (!curso) {
+				return res.status(400).json({
+					error: "Curso no existe",
+				});
+			}
+
+			try {
+				// Intentar parsear 'modulos_lecciones' si existe en el curso
+				if (curso.modulos_lecciones) {
+					curso.modulos_lecciones = JSON.parse(curso.modulos_lecciones);
+				}
+			} catch (parseError) {
+				console.error("Error al parsear modulos_lecciones:", parseError);
+				// Podemos decidir si queremos enviar este error al cliente o no
+			}
+
+			return res.status(200).json({ curso });
+		} catch (error) {
+			console.error("Error en el servidor:", error);
+			res.status(500).json({
+				error: "Error en el servidor",
+			});
+		}
+	};
 }
 
 export default CursoController;

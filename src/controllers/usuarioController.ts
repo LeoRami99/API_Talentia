@@ -1,5 +1,7 @@
 import { Usuario, schemaUsuario } from "../models/Usuario";
 import { Request, Response } from "express";
+import { generateToken, verifyToken, verifyTokenResetPassword, generateTokenResetPassword } from "../utils/tokenUtils";
+import sendMail from "../utils/sendMail";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 const bcrypt = require("bcryptjs");
@@ -200,6 +202,7 @@ class UsuarioController {
 			const token = jwt.sign(
 				{
 					id: usuario.id,
+					role: "usuario",
 				},
 				process.env.JWT_SECRET_KEY as string,
 				{ expiresIn: "1h" }
@@ -212,6 +215,138 @@ class UsuarioController {
 			return res.status(500).json({
 				error: "Error en el servidor",
 			});
+		}
+	};
+	sendEmailToVerify = async (req: Request, res: Response) => {
+		try {
+			let is_active_account = false;
+			const emailExist = await Usuario.findOne({
+				where: { email: req.body.email },
+			});
+			if (emailExist) {
+				if (emailExist.email_verified) {
+					is_active_account = true;
+					return res.status(400).json({ message: "Email already verified" });
+				} else {
+					is_active_account = false;
+					const url_endpoint = process.env.ENDPOINT as string;
+					const token = generateToken(req.body.email, is_active_account) as string;
+					const html_mail = `
+					<p>¡Recuerda que tienes 1 hora para verificar tu correo electrónico!</p>
+					<p>Para verificar tu correo electrónico, haz clic en el siguiente enlace:</p>
+				<a href="${url_endpoint}/usuario/verify-email/${token}">${url_endpoint}/usuario/verify-email/${token}</a>`;
+					sendMail(req.body.email, "Verifica tu cuenta", html_mail);
+					res.status(200).json({ message: "Email sent successfully" });
+				}
+			} else {
+				return res.status(400).json({ message: "Email not exists" });
+			}
+		} catch (error) {
+			res.status(500).json({ message: "Server Error" });
+		}
+	};
+	verifyEmail = async (req: Request, res: Response) => {
+		try {
+			const token = req.params.token as string;
+			const verify = verifyToken(token);
+			if (verify.isValid) {
+				const candidate = await Usuario.findOne({
+					where: { email: verify.email },
+				});
+				if (candidate) {
+					await Usuario.update({ email_verified: true }, { where: { email: verify.email } });
+					res.status(200).header("Content-Type", "text/html").send(`<meta http-equiv="refresh" content="2; URL=${process.env.FRONTEND_ENDPOINT}" /><h1>¡Tu correo electrónico ha sido verificado!</h1>`);
+				} else {
+					res.status(404).json({ message: "Usuario no existe" });
+				}
+			} else {
+				res.status(400).json({ message: verify.message });
+			}
+		} catch (error) {
+			res.status(500).json({ message: "Server Error" });
+		}
+	};
+	sendEmailToResetPassword = async (req: Request, res: Response) => {
+		try {
+			const emailExist = await Usuario.findOne({
+				where: { email: req.body.email },
+			});
+			if (emailExist) {
+				const url_endpoint = (process.env.FRONTEND_ENDPOINT as string) || "http://localhost:4000";
+				const token = generateTokenResetPassword(emailExist.id) as string;
+				const html_mail = `
+				<p>¡Recuerda que tienes 1 hora para cambiar tu contraseña!</p>
+				<p>Para cambiar tu contraseña, haz clic en el siguiente enlace:</p>
+			<a href="${url_endpoint}/usuario/reset-password/${token}">${url_endpoint}/usuario/reset-password/${token}</a>`;
+				sendMail(req.body.email, "Cambia tu contraseña", html_mail);
+				res.status(200).json({ message: "Email sent successfully" });
+			} else {
+				return res.status(400).json({ message: "Email not exists" });
+			}
+		} catch (error) {
+			res.status(500).json({ message: "Server Error" });
+		}
+	};
+	resetPassword = async (req: Request, res: Response) => {
+		try {
+			const token = req.params.token as string;
+			const verify = verifyTokenResetPassword(token);
+			if (verify.isValid) {
+				const usuario = await Usuario.findOne({
+					where: { id: verify.id },
+				});
+				if (usuario) {
+					const { password } = req.body;
+					const salt = bcrypt.genSaltSync(10);
+					const hash = bcrypt.hashSync(password, salt);
+					await Usuario.update({ password: hash }, { where: { id: verify.id } });
+					res.status(200).header("Content-Type", "text/html").send(`<meta http-equiv="refresh" content="2; URL=${process.env.FRONTEND_ENDPOINT}" /><h1>¡Tu contraseña ha sido cambiada!</h1>`);
+				} else {
+					res.status(404).json({ message: "Usuario no existe" });
+				}
+			} else {
+				res.status(400).json({ message: verify.message });
+			}
+		} catch (error) {
+			res.status(500).json({ message: "Server Error" });
+		}
+	};
+	verifyAndupdatePasswordFromReset = async (req: Request, res: Response) => {
+		try {
+			const token = req.body.token as string;
+			const id_usuario = req.body.id as string;
+			const verify = verifyTokenResetPassword(token);
+			if (id_usuario !== verify.id) {
+				return res.status(400).json({ message: "Credentials not valid" });
+			} else {
+				if (verify.isValid) {
+					const recruiter = await Usuario.findOne({
+						where: { id: id_usuario },
+					});
+					if (recruiter) {
+						const passwordSchema = Joi.string().pattern(new RegExp("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$")).min(8).max(128).required().messages({
+							"string.min": "La contraseña debe tener al menos 8 caracteres.",
+							"string.max": "La contraseña no puede tener más de 128 caracteres.",
+							"string.pattern.base": "La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.",
+							"any.required": "El campo de contraseña es obligatorio.",
+						});
+
+						// Validar el password
+						const { error } = passwordSchema.validate(req.body.password);
+						if (error) {
+							return res.status(400).json({ message: error.details[0].message });
+						}
+						await Usuario.update({ password: bcrypt.hashSync(req.body.password, 10) }, { where: { id: id_usuario } });
+						res.status(200).json({ message: "Password updated successfully" });
+					} else {
+						res.status(404).json({ message: "Recruiter not found" });
+					}
+				} else {
+					res.status(400).json({ message: verify.message });
+				}
+			}
+		} catch (error) {
+			res.status(500).json({ message: "Server Error" });
 		}
 	};
 }

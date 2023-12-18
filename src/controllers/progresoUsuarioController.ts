@@ -70,6 +70,30 @@ class ProgresoUsuarioController {
 			res.status(400).json(error);
 		}
 	};
+	obtenerProgresoUsuarioByIds = async (req: Request, res: Response) => {
+		try {
+			const { id_usuario, id_curso } = req.params;
+			const progresoUsuario = await ProgresoUsuario.findOne({
+				where: {
+					UsuarioId: id_usuario,
+					CursoId: id_curso,
+				},
+			});
+			if (!progresoUsuario) {
+				return res.status(404).json({
+					message: "El progreso del usuario no existe",
+				});
+			}
+			progresoUsuario.progreso = JSON.parse(progresoUsuario.progreso);
+			res.status(200).json({
+				progresoUsuario,
+			});
+		} catch (error) {
+			res.status(500).json({
+				message: "Error al obtener el progreso del usuario",
+			});
+		}
+	};
 }
 
 export default ProgresoUsuarioController;
