@@ -94,6 +94,40 @@ class ProgresoUsuarioController {
 			});
 		}
 	};
+	actualizarProgresoUsuario = async (req: Request, res: Response) => {
+		try {
+			const { id_usuario, id_curso } = req.params;
+			const { progreso } = req.body;
+			const progresoUsuario = await ProgresoUsuario.findOne({
+				where: {
+					UsuarioId: id_usuario,
+					CursoId: id_curso,
+				},
+			});
+			if (!progresoUsuario) {
+				return res.status(404).json({
+					message: "El progreso del usuario no existe",
+				});
+			}
+			const progresoUsuarioActualizado = await progresoUsuario.update({
+				progreso: progreso,
+			});
+			if (progresoUsuarioActualizado) {
+				return res.status(200).json({
+					message: "Progreso del usuario actualizado correctamente",
+					progresoUsuarioActualizado,
+				});
+			} else {
+				return res.status(500).json({
+					message: "Error al actualizar el progreso del usuario",
+				});
+			}
+		} catch (error) {
+			res.status(500).json({
+				message: "Error al actualizar el progreso del usuario",
+			});
+		}
+	};
 }
 
 export default ProgresoUsuarioController;

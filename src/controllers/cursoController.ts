@@ -3,6 +3,8 @@ import { Curso, schemaCurso } from "../models/Curso";
 import { Administrador } from "../models/Administrador";
 import Joi from "joi";
 import { ICurso, ILecciones, IModulos_lecciones } from "../Interfaces/interfaceCurso";
+import { CursoExamen } from "../models/CursoExamen";
+import { Examen } from "../models/Examen";
 // import jwt from "jsonwebtoken";
 
 class CursoController {
@@ -335,6 +337,152 @@ class CursoController {
 			return res.status(200).json({ curso });
 		} catch (error) {
 			console.error("Error en el servidor:", error);
+			res.status(500).json({
+				error: "Error en el servidor",
+			});
+		}
+	};
+	getExamenCursoById = async (req: Request, res: Response) => {
+		try {
+			const { id_curso } = req.params;
+			const examenes = await CursoExamen.findAll({
+				where: { cursoId: id_curso },
+			});
+			if (examenes.length > 0) {
+				return res.status(200).json({ examenes });
+			} else {
+				return res.status(404).json({ error: "No existen examenes para este curso" });
+			}
+		} catch (error) {
+			console.error("Error en el servidor:", error);
+			res.status(500).json({
+				error: "Error en el servidor",
+			});
+		}
+	};
+	crearCursoExamen = async (req: Request, res: Response) => {
+		try {
+			const schemaCrearCursoExamen = Joi.object({
+				cursoId: Joi.string().required().messages({
+					"string.base": `CursoId debe ser de tipo texto`,
+					"string.empty": `CursoId no puede estar vacío`,
+					"any.required": `CursoId es un campo requerido`,
+				}),
+				examenId: Joi.string().required().messages({
+					"string.base": `ExamenId debe ser de tipo texto`,
+					"string.empty": `ExamenId no puede estar vacío`,
+					"any.required": `ExamenId es un campo requerido`,
+				}),
+			});
+			const { error } = schemaCrearCursoExamen.validate(req.body);
+			if (error) {
+				return res.status(400).json({
+					error: error.details[0].message,
+				});
+			}
+			const { cursoId, examenId } = req.body;
+			const curso_exist = await Curso.findOne({ where: { id: cursoId } });
+			if (!curso_exist) {
+				return res.status(400).json({
+					error: "Curso no existe",
+				});
+			}
+			const examen_exist = await Examen.findOne({ where: { id: examenId } });
+			if (!examen_exist) {
+				return res.status(400).json({
+					error: "Examen no existe",
+				});
+			}
+
+			const examen_curso = await CursoExamen.findOne({ where: { cursoId, examenId } });
+			if (examen_curso) {
+				return res.status(400).json({
+					error: "Relación Curso Examen ya existe",
+				});
+			}
+			const createdCursoExamen = await CursoExamen.create(
+				{
+					cursoId,
+					examenId,
+				},
+				{ fields: ["cursoId", "examenId"] }
+			);
+			if (createdCursoExamen) {
+				return res.status(201).json({
+					message: "Relación Curso Examen creado exitosamente",
+				});
+			} else {
+				return res.status(400).json({
+					error: "Error al crear CursoExamen",
+				});
+			}
+		} catch (error) {
+			console.debug(error);
+			res.status(500).json({
+				error: "Error en el servidor",
+			});
+		}
+	};
+	updateCursoExamen = async (req: Request, res: Response) => {
+		try {
+			const { id_curso, id_examen } = req.params;
+			const schemaUpdateCursoExamen = Joi.object({
+				cursoId: Joi.string().required().messages({
+					"string.base": `CursoId debe ser de tipo texto`,
+					"string.empty": `CursoId no puede estar vacío`,
+					"any.required": `CursoId es un campo requerido`,
+				}),
+				examenId: Joi.string().required().messages({
+					"string.base": `ExamenId debe ser de tipo texto`,
+					"string.empty": `ExamenId no puede estar vacío`,
+					"any.required": `ExamenId es un campo requerido`,
+				}),
+			});
+			const { error } = schemaUpdateCursoExamen.validate(req.body);
+			if (error) {
+				return res.status(400).json({
+					error: error.details[0].message,
+				});
+			}
+
+			const { cursoId, examenId } = req.body;
+
+			// Verificar si el curso existe
+			const curso_exist = await Curso.findOne({ where: { id: cursoId } });
+			if (!curso_exist) {
+				return res.status(400).json({
+					error: "Curso no existe",
+				});
+			}
+
+			// Verificar si el examen existe
+			const examen_exist = await Examen.findOne({ where: { id: examenId } });
+			if (!examen_exist) {
+				return res.status(400).json({
+					error: "Examen no existe",
+				});
+			}
+
+			// Verificar si el examen ya está asignado a otro curso
+			const examenAsignado = await CursoExamen.findOne({ where: { examenId } });
+			if (examenAsignado) {
+				return res.status(400).json({
+					error: "El examen ya está asignado a otro curso",
+				});
+			}
+			// Actualizar la relación Curso-Examen
+			const updatedCursoExamen = await CursoExamen.update({ cursoId, examenId }, { where: { cursoId: id_curso, examenId: id_examen } });
+			if (updatedCursoExamen) {
+				return res.status(200).json({
+					message: "Relación Curso-Examen actualizado exitosamente",
+				});
+			} else {
+				return res.status(400).json({
+					error: "Error al actualizar CursoExamen",
+				});
+			}
+		} catch (error) {
+			console.debug(error);
 			res.status(500).json({
 				error: "Error en el servidor",
 			});

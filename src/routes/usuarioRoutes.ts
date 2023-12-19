@@ -21,5 +21,9 @@ router.get("/get/:id", usuarioController.getUsuarioById);
 // creación de progreso de usuario
 router.post("/crear-progreso-usuario", progresoUsuarioController.crearProgresoUsuario);
 router.get("/get-progreso-usuario/:id_usuario/:id_curso", progresoUsuarioController.obtenerProgresoUsuarioByIds);
+router.put("/actualizar-progreso-usuario/:id_usuario/:id_curso", progresoUsuarioController.actualizarProgresoUsuario);
+
+// cursos donde el usuario esta inscrito a los cursos
+router.get("/cursos-inscritos/:id_usuario", usuarioController.getCursosUsuario);
 
 export default router;

@@ -13,6 +13,10 @@ router.get("/modulos-lecciones", cursoController.getCursoModuloLecciones);
 router.put("/actualizar/:id_curso", cursoController.updateCurso);
 router.put("/actualizar-modulos-lecciones/:id_curso", cursoController.updateModulosLecciones);
 
+router.get("/get-examen/:id_curso", cursoController.getExamenCursoById);
+router.post("/crear-curso-examen", cursoController.crearCursoExamen);
+router.put("/actualizar-curso-examen/:id_curso/:id_examen", cursoController.updateCursoExamen);
+
 // obtener todos los cursos
 
 // Esta es para la los usuarios

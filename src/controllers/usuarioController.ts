@@ -1,4 +1,6 @@
 import { Usuario, schemaUsuario } from "../models/Usuario";
+import { Curso } from "../models/Curso";
+import { ProgresoUsuario, schemaProgresoUsuario } from "../models/ProgresoUsuario";
 import { Request, Response } from "express";
 import { generateToken, verifyToken, verifyTokenResetPassword, generateTokenResetPassword } from "../utils/tokenUtils";
 import sendMail from "../utils/sendMail";
@@ -347,6 +349,34 @@ class UsuarioController {
 			}
 		} catch (error) {
 			res.status(500).json({ message: "Server Error" });
+		}
+	};
+	// trear los cursos donde el usuario esta inscrito
+	getCursosUsuario = async (req: Request, res: Response) => {
+		try {
+			const { id_usuario } = req.params;
+			const cursos = await Curso.findAll({
+				include: [
+					{
+						model: Usuario,
+						attributes: [],
+						where: { id: id_usuario },
+						through: { attributes: [] },
+					},
+				],
+				attributes: {
+					exclude: ["modulos_lecciones", "AdministradorId"],
+				},
+			});
+
+			return res.status(200).json({
+				cursos,
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({
+				error: "Error en el servidor",
+			});
 		}
 	};
 }
