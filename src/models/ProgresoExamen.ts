@@ -10,6 +10,7 @@ class ProgresoExamen extends Model {
 	public ExamenId!: string;
 	public numIntentos!: number;
 	public puntuacionObtenida!: number;
+	public dataExamen!: string;
 	public completado!: boolean;
 }
 ProgresoExamen.init(
@@ -33,6 +34,12 @@ ProgresoExamen.init(
 				key: "id",
 			},
 		},
+		numIntentos: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0,
+		},
+		dataExamen: DataTypes.JSON(),
+
 		completado: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false,

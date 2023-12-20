@@ -240,6 +240,7 @@ class ExamenController {
 			const progresoExamen = await ProgresoExamen.create({
 				UsuarioId: usuarioID,
 				ExamenId: examenID,
+				dataExamen: [],
 			});
 			if (progresoExamen) {
 				res.status(201).json({
@@ -255,6 +256,62 @@ class ExamenController {
 			console.error(error);
 			res.status(500).json({
 				message: "Error al crear el progreso del examen",
+			});
+		}
+	};
+
+	getProgresoExamen = async (req: Request, res: Response) => {
+		try {
+			const { id_usuario, id_examen } = req.params;
+
+			const progresoExamen = await ProgresoExamen.findOne({
+				where: { UsuarioId: id_usuario, ExamenId: id_examen },
+			});
+			if (!progresoExamen) {
+				return res.status(404).json({ message: "El progreso del examen no existe" });
+			}
+			progresoExamen.dataExamen = JSON.parse(progresoExamen.dataExamen);
+			return res.status(200).json({
+				message: "Progreso del examen encontrado",
+				progresoExamen,
+			});
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({
+				message: "Error al obtener el progreso del examen",
+			});
+		}
+	};
+
+	updateProgresoExamen = async (req: Request, res: Response) => {
+		try {
+			const { usuarioID, examenID } = req.params;
+			const { calificacion, intentos } = req.body;
+
+			const progresoExamen = await ProgresoExamen.findOne({
+				where: { UsuarioId: usuarioID, ExamenId: examenID },
+			});
+			if (!progresoExamen) {
+				return res.status(404).json({ message: "El progreso del examen no existe" });
+			}
+			const progresoExamenUpdated = await progresoExamen.update({
+				calificacion,
+				intentos,
+			});
+			if (progresoExamenUpdated) {
+				return res.status(200).json({
+					message: "Progreso del examen actualizado correctamente",
+					progresoExamen: progresoExamenUpdated,
+				});
+			} else {
+				return res.status(500).json({
+					message: "Error al actualizar el progreso del examen",
+				});
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({
+				message: "Error al actualizar el progreso del examen",
 			});
 		}
 	};
