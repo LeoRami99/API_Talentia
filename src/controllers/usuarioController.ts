@@ -207,7 +207,7 @@ class UsuarioController {
 					role: "usuario",
 				},
 				process.env.JWT_SECRET_KEY as string,
-				{ expiresIn: "1h" }
+				{ expiresIn: "7d" }
 			);
 			return res.status(200).json({
 				token,
@@ -279,11 +279,11 @@ class UsuarioController {
 				const html_mail = `
 				<p>¡Recuerda que tienes 1 hora para cambiar tu contraseña!</p>
 				<p>Para cambiar tu contraseña, haz clic en el siguiente enlace:</p>
-			<a href="${url_endpoint}/usuario/reset-password/${token}">${url_endpoint}/usuario/reset-password/${token}</a>`;
+			<a href="${url_endpoint}/reset-password?token=${token}">${url_endpoint}/reset-password?token=${token}</a>`;
 				sendMail(req.body.email, "Cambia tu contraseña", html_mail);
-				res.status(200).json({ message: "Email sent successfully" });
+				res.status(200).json({ message: "Correo enviado" });
 			} else {
-				return res.status(400).json({ message: "Email not exists" });
+				return res.status(400).json({ message: "El correo no existe" });
 			}
 		} catch (error) {
 			res.status(500).json({ message: "Server Error" });

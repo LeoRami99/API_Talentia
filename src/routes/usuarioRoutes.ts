@@ -28,6 +28,7 @@ router.put("/actualizar-progreso-usuario/:id_usuario/:id_curso", progresoUsuario
 // Progreso del examane
 router.post("/crear-progreso", examenController.createProgresoExamen);
 router.get("/get-progreso-examen/:id_usuario/:id_examen", examenController.getProgresoExamen);
+router.put("/update-progreso-examen/:id_progreso_examen", examenController.updateProgresoExamen);
 
 // cursos donde el usuario esta inscrito a los cursos
 router.get("/cursos-inscritos/:id_usuario", usuarioController.getCursosUsuario);

@@ -285,18 +285,19 @@ class ExamenController {
 
 	updateProgresoExamen = async (req: Request, res: Response) => {
 		try {
-			const { usuarioID, examenID } = req.params;
-			const { calificacion, intentos } = req.body;
+			const { id_progreso_examen } = req.params;
+			const { numIntentos, completado, dataExamen } = req.body;
 
 			const progresoExamen = await ProgresoExamen.findOne({
-				where: { UsuarioId: usuarioID, ExamenId: examenID },
+				where: { id: id_progreso_examen },
 			});
 			if (!progresoExamen) {
 				return res.status(404).json({ message: "El progreso del examen no existe" });
 			}
 			const progresoExamenUpdated = await progresoExamen.update({
-				calificacion,
-				intentos,
+				numIntentos,
+				completado,
+				dataExamen,
 			});
 			if (progresoExamenUpdated) {
 				return res.status(200).json({
